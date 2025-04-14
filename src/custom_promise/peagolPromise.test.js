@@ -37,7 +37,7 @@ describe("peagolPromiseTest", () => {
   })
 
   it("should have a .then method", () => {
-    const promise = new peagolPromise(() => { });
+    const promise = new peagolPromise(null);
     expect(typeof promise.then).toBe("function");
   });
 
@@ -100,7 +100,7 @@ describe("peagolPromiseTest", () => {
       throw reason;
     });
 
-    promise.then(() => { }, onRejected);
+    promise.then(null, onRejected);
     expect(onRejected.mock.calls.length).toBe(1);
     expect(onRejected.mock.calls[0][0]).toBe(reason);
     expect(promise.state).toBe("REJECTED");
@@ -112,11 +112,11 @@ describe("peagolPromiseTest", () => {
       setTimeout(fulfill, 1, value);
     })
     const onFulfilled = jest.fn();
-    promise.then(onFulfilled, () => { });
+    promise.then(onFulfilled, null);
     setTimeout(() => {
       expect(onFulfilled.mock.calls.length).toBe(1);
       expect(onFulfilled.mock.calls[0][0]).toBe(value);
-      promise.then(onFulfilled, () => { });
+      promise.then(onFulfilled, null);
     }, 5);
 
     expect(onFulfilled.mock.calls.length).toBe(0);
@@ -135,11 +135,11 @@ describe("peagolPromiseTest", () => {
     })
 
     const onRejected = jest.fn();
-    promise.then(() => { }, onRejected);
+    promise.then(null, onRejected);
     setTimeout(() => {
       expect(onRejected.mock.calls.length).toBe(1);
       expect(onRejected.mock.calls[0][0]).toBe(reason);
-      promise.then(() => { }, onRejected);
+      promise.then(null, onRejected);
     }, 5);
 
     expect(onRejected.mock.calls.length).toBe(0);
@@ -158,8 +158,8 @@ describe("peagolPromiseTest", () => {
       const p = new peagolPromise((fulfill, reject) => {
         fulfill();
       });
-      const q = p.then(qOnFulfilled, () => { });
-      const r = q.then(rOnFulfilled, () => { });
+      const q = p.then(qOnFulfilled, null);
+      const r = q.then(rOnFulfilled, null);
     }).not.toThrow();
   });
 
@@ -170,7 +170,7 @@ describe("peagolPromiseTest", () => {
       fulfill();
     }).then(() => {
       return value;
-    }).then(onFulfilled);
+    }, null).then(onFulfilled, null);
 
     expect(onFulfilled.mock.calls.length).toBe(1);
     expect(onFulfilled.mock.calls[0][0]).toBe(value);
@@ -178,15 +178,15 @@ describe("peagolPromiseTest", () => {
 
   it("if .then`s onRejected is called without errors it should transition to FULFILLED", () => {
     const value = ":)";
-    const onRejected = jest.fn();
+    const onFulfilled = jest.fn();
     const promise = new peagolPromise((fulfill, reject) => {
       reject();
-    }).then(() => {
+    }).then(null, () => {
       return value;
-    }).then(onRejected);
+    }).then(onFulfilled, null);
 
-    expect(onRejected.mock.calls.length).toBe(1)
-    expect(onRejected.mock.calls[0][0]).toBe(value);
+    expect(onFulfilled.mock.calls.length).toBe(1)
+    expect(onFulfilled.mock.calls[0][0]).toBe(value);
   });
 
   it("if .then`s onFulfilled is called and has an error it should transition to REJECTED", () => {
@@ -196,7 +196,7 @@ describe("peagolPromiseTest", () => {
       fulfill();
     }).then(() => {
       throw reason;
-    }, () => { }).then(() => { }, onRejected);
+    }, null).then(null, onRejected);
 
     expect(onRejected.mock.calls.length).toBe(1);
     expect(onRejected.mock.calls[0][0]).toBe(reason);
@@ -207,9 +207,9 @@ describe("peagolPromiseTest", () => {
     const onRejected = jest.fn();
     const promise = new peagolPromise((fulfill, reject) => {
       reject();
-    }).then(() => { }, () => {
+    }).then(null, () => {
       throw reason;
-    }).then(() => { }, onRejected);
+    }).then(null, onRejected);
 
     expect(onRejected.mock.calls.length).toBe(1);
     expect(onRejected.mock.calls[0][0]).toBe(reason);
@@ -238,7 +238,7 @@ describe("peagolPromiseTest", () => {
       return new peagolPromise((fulfill, reject) => {
         setTimeout(fulfill, 0, value);
       });
-    }, () => { }).then(onFulfilled, () => { });
+    }, null).then(onFulfilled, () => { });
     setTimeout(() => {
       expect(onFulfilled.mock.calls.length).toBe(1);
       expect(onFulfilled.mock.calls[0][0]).toBe(value);
@@ -252,8 +252,8 @@ describe("peagolPromiseTest", () => {
     const promise = new peagolPromise((fulfill, reject) => {
       fulfill(value);
     });
-    const q = promise.then(null, () => { });
-    q.then(onFulfilled, () => { });
+    const q = promise.then(null, null);
+    q.then(onFulfilled, null);
 
     expect(onFulfilled.mock.calls.length).toBe(1);
     expect(onFulfilled.mock.calls[0][0]).toBe(value);
@@ -280,7 +280,7 @@ describe("peagolPromiseTest", () => {
     const promise = new peagolPromise((fulfill, reject) => {
       fulfill(value);
       resolved = true;
-    }).then(onFulfilled, () => { });
+    }).then(onFulfilled, null);
 
     expect(onFulfilled.mock.calls.length).toBe(0);
 
@@ -302,7 +302,7 @@ describe("peagolPromiseTest", () => {
       fulfill();
     }).then(() => {
       throw reason;
-    }).then(null, onRejected);
+    }, null).then(null, onRejected);
 
     expect(onRejected.mock.calls.length).toBe(0);
 
@@ -320,7 +320,7 @@ describe("peagolPromiseTest", () => {
     });
     const q = promise.then(() => {
       return q;
-    }, () => { });
+    }, null);
     q.then(null, onRejected);
 
     setTimeout(() => {
