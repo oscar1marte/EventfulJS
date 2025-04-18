@@ -1,3 +1,7 @@
+const isPromise = (value) => {
+  return value && typeof value.then === 'function';
+}
+
 class PeagolPromise {
   constructor(executor) {
     this.state = 'PENDING';
@@ -13,38 +17,82 @@ class PeagolPromise {
     }
   }
 
+  //then(onFulfilled, onRejected) {
+  //let nextPromise = new PeagolPromise(() => { });
+  //if (typeof onFulfilled === 'function' && !this.reason) {
+  //if (this.state === 'PENDING') {
+  //this.pendings.push(onFulfilled);
+  //} else {
+  //try {
+  //value = onFulfilled(this.value);
+  //nextPromise.state = 'FULFILLED';
+  //nextPromise.value = value;
+  //} catch (e) {
+  //nextPromise.state = 'REJECTED';
+  //nextPromise.reason = e;
+  //}
+  //return nextPromise;
+  //}
+  //}
+  //if (typeof onRejected === 'function' && !this.value) {
+  //if (this.state === 'PENDING') {
+  //this.errs.push(onRejected);
+  //} else {
+  //try {
+  //value = onRejected(this.reason);
+  //nextPromise.state = 'FULFILLED';
+  //nextPromise.value = value;
+  //} catch (e) {
+  //nextPromise.state = 'REJECTED';
+  //nextPromise.reason = e;
+  //}
+  //return nextPromise;
+  //}
+  //}
+  //return nextPromise;
+  //}
+
   then(onFulfilled, onRejected) {
-    let nextPromise = new PeagolPromise(() => { });
-    if (typeof onFulfilled === 'function' && !this.reason) {
-      if (this.state === 'PENDING') {
-        this.pendings.push(onFulfilled);
-      } else {
-        try {
-          value = onFulfilled(this.value);
-          nextPromise.state = 'FULFILLED';
-          nextPromise.value = value;
-        } catch (e) {
-          nextPromise.state = 'REJECTED';
+    return new PeagolPromise((fulfill, reject) => {
+      const handleOnFulfilled = (value) => {
+        if (typeof onFulfilled === 'function') {
+          try {
+            result = onFulfilled(value);
+            this.state = 'FULFILLED';
+            this.value = result;
+          } catch (e) {
+            this.state = 'REJECTED';
+            this.reason = e;
+          }
         }
-        return nextPromise;
       }
-    }
-    if (typeof onRejected === 'function' && !this.value) {
-      if (this.state === 'PENDING') {
-        this.errs.push(onRejected);
-      } else {
-        try {
-          value = onRejected(this.reason);
-          nextPromise.state = 'FULFILLED';
-          nextPromise.value = value;
-        } catch (e) {
-          nextPromise.state = 'REJECTED';
-          nextPromise.reason = e;
+
+      const handleOnRejected = (reason) => {
+        if (typeof onRejected === 'function') {
+          try {
+            result = onRejected(reason);
+            this.state = 'FULFILLED';
+            this.value = result;
+          } catch (e) {
+            this.state = 'REJECTED';
+            this.reason = e;
+          }
         }
-        return nextPromise;
       }
-    }
-    return nextPromise;
+
+      if (this.state === 'PENDING') {
+        this.pendings.push(handleOnFulfilled);
+        this.errs.push(handleOnRejected)
+      } else {
+        setTimeout(() => {
+          handleOnFulfilled();
+        }, 0);
+
+        setTimeout(() => {
+          handleOnRejected();
+        }, 0);
+      }
+    });
   }
 
   resolve(value) {
